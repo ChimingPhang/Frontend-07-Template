@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicTacToe</title>
+    <style>
+        .cell {
+            display: inline-flex;
+            height: 100px;
+            width: 100px;
+            background: #333;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #fff;
+            vertical-align: top;
+            font-size: 40px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <div>
+        <h3>Tips: <span id="currentType"></span></h3>
+        <div><button onclick="reset()">Reset</button></div>
+    </div>
+    <script>
+        const currentTypeEl = document.getElementById('currentType');
+        const appBoard = document.getElementById('app');
+
+        let pattern = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+        let gameEnd = false;
+        let color = 1;
+
+
+        function reset() {
+            pattern = [
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0]
+            ]
+
+            gameEnd = false;
+            color = 1;            
+            draw();
+            setCurrentType(color);
+        }
+
+        function draw() {
+            appBoard.innerHTML = '';
+            for (let x = 0; x < pattern.length; x++) {
+                for (let y = 0; y < pattern[x].length; y++) {
+                    const cell = document.createElement('span');
+                    cell.classList.add('cell');
+                    cell.innerText = pattern[x][y] === 2 ? '❌' :
+                        pattern[x][y] === 1 ? '⭕️' : '';
+                    cell.addEventListener('click', () => !cell.innerText && userMove(x, y));
+                    appBoard.appendChild(cell);
+                }
+                appBoard.appendChild(document.createElement('br'))
+            }
+        }
+
+        function computerMove() {
+            const choice = bestChoice(pattern, color);
+            if (choice.point) {
+                console.log(choice.point[0], choice.point[1]);
+                pattern[choice.point[0]][choice.point[1]] = color;
+            }
+
+            console.log(pattern);
+
+            if (check(pattern, color)) {
+                currentTypeEl.innerText = color === 2 ? '❌ is the winner' : '⭕️ is the winner';
+            }
+
+            draw();
+        }
+
+        function userMove(x, y) {
+            if (gameEnd) {
+                return;
+            }
+            pattern[x][y] = color;
+            if (check(pattern, color)) {
+                gameEnd = true;
+                currentTypeEl.innerText = color === 2 ? '❌ is the winner' : '⭕️ is the winner';
+            }
+            color = 3 - color;
+            draw();
+            setCurrentType(color);
+            computerMove()
+        }
+
+        function setCurrentType(color) {
+            if (gameEnd) {
+                return;
+            }
+            
+            let remain = false;
+            for (let i = 0; i < pattern.length; i++) {
+                for (let j = 0; j < pattern[i].length; j++) {
+                    if (pattern[i][j] === 0) {
+                        remain = true;
+                    }
+                }
+            }
+
+            if (!remain) {
+                currentTypeEl.innerText = 'Game End'
+                return;
+            }
+            currentTypeEl.innerText = 'Next one is ' + (color === 2 ? '❌' : color === 1 ? '⭕️' : '');
+        }
+
+        function check(pattern, color) {
+            // 横向比较
+            for (let i = 0; i < 3; i++) {
+                let win = true;
+                for (let j = 0; j < 3; j++) {
+                    if (pattern[i][j] !== color) {
+                        win = false;
+                    }
+                }
+
+                if (win)
+                    return true;
+            }
+
+            // 纵向比较
+            for (let i = 0; i < 3; i++) {
+                let win = true;
+                for (let j = 0; j < 3; j++) {
+                    if (pattern[j][i] !== color) {
+                        win = false;
+                    }
+                }
+                if (win)
+                    return true;
+            }
+
+            // 斜向对比
+            {
+                let win = true;
+                for (let i = 0; i < 3; i++) {
+                    if (pattern[i][i] !== color) {
+                        win = false;
+                    }
+                }
+                if (win)
+                    return true;
+            }
+
+            {
+                let win = true;
+                for (let i = 0; i < 3; i++) {
+                    if (pattern[i][2 - i] !== color) {
+                        win = false;
+                    }
+                }
+                if (win)
+                    return true;
+            }
+
+            return false;
+        }
+
+        
+
+        function clone(pattern) {
+            return JSON.parse(JSON.stringify(pattern));
+        }
+
+        function willWin(pattern, color) {
+            for(let i = 0; i < 3; i++) {
+                for(let j = 0; j < 3; j++) {
+                    if (pattern[i][j]) 
+                        continue;
+                    const temp = clone(pattern);
+                    temp[i][j] = color;
+                    if (check(temp, color)) {
+                        return [i, j];
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function bestChoice(pattern, color) {
+            let point = willWin(pattern, color);
+            // 先判断，如果可以赢则直接返回结果
+            if (point) {
+                return {
+                    point,
+                    result: 1
+                }
+            }
+            let result = -1;
+            // 没法直接赢的话进行递归判断是否可以赢
+            outer:for(let i = 0; i < 3; i++) {
+                for(let j = 0; j < 3; j++) {
+                    if (pattern[i][j]) 
+                        continue;
+                    const temp = clone(pattern);
+                    temp[i][j] = color;
+                    const r = bestChoice(temp, 3-color).result;
+
+                    if (-r >= result) {
+                        result = -r;
+                        point = [i, j];
+                    }
+
+                    if (result === 1) {
+                        break outer;
+                    }
+                }
+            }
+
+            return {
+                point,
+                result: point ? result : 0
+            }
+        }
+
+        draw();
+        setCurrentType(color);
+
+    </script>
+</body>
+
+</html>
