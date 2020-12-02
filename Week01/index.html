@@ -80,8 +80,9 @@
             if (check(pattern, color)) {
                 currentTypeEl.innerText = color === 2 ? '❌ is the winner' : '⭕️ is the winner';
             }
-
+            color = 3 - color;
             draw();
+            setCurrentType(color);
         }
 
         function userMove(x, y) {
