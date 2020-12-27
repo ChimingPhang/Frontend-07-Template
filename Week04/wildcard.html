@@ -43,7 +43,10 @@
 
             reg.lastIndex = lastIndex;
 
-            console.log(reg.exec(source));
+            // 只要有正则匹配不到就结束，返回false
+            if (!reg.exec(source)) {
+                return false;
+            }
 
             lastIndex = reg.lastIndex;
         }
