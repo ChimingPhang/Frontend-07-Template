@@ -1,0 +1,76 @@
+<div id="container">
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+    文字 文字 文字 文字 文字 文字 文字
+</div>
+<div id="draggable" style="width: 100px;height: 100px;background-color: pink;display: inline-block;"></div>
+
+
+<script>
+    // Range 经常配合 selection 被用来操作文字范围做划词插件和编辑器。
+    let draggable = document.getElementById('draggable');
+    let baseX = 0, baseY = 0;
+    draggable.addEventListener('mousedown', (event) => {
+        const startX  = event.clientX;
+        const startY  = event.clientY;
+        
+
+        const up = (event) => {
+            baseX = baseX + event.clientX - startX;
+            baseY = baseY + event.clientY - startY;
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+        }
+
+        const move = (event) => {
+            const range = getNearest(event.clientX, event.clientY);
+            range.insertNode(draggable);
+            // draggable.style.transform = `translate(${baseX + event.clientX - startX}px, ${baseY + event.clientY - startY}px)`
+        }
+
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+    });
+
+    let ranges = [];
+    let container = document.getElementById('container');
+    // 先保存每个元素位置
+    for (let i = 0; i < container.childNodes[0].textContent.length; i++) {
+        let range = document.createRange();
+        range.setStart(container.childNodes[0], i);
+        range.setEnd(container.childNodes[0], i);
+        ranges.push(range);
+    }
+    // 找出当前鼠标点最接近的range元素
+    function getNearest(x, y) {
+        // 设置Infinity, 任何一个值都可以把它替换掉
+        let min = Infinity;
+        let nearestRange = null;
+        for (let range of ranges) {
+            let rect = range.getBoundingClientRect();
+            let distance = (rect.x - x) ** 2 + (rect.y - y) ** 2;
+            if (distance < min) {
+                nearestRange = range
+                min = distance
+            }
+        }
+
+        return nearestRange;
+    }
+
+    document.addEventListener('selectstart', event => event.preventDefault());
+</script>
