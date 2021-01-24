@@ -3,9 +3,9 @@ const Request = require('./request');
 
 void async function () {
     let request = new Request({
-        method: 'GET',
+        method: "GET",
         host: '127.0.0.1',
-        port: '8088',
+        port: '8080',
         path: '/',
         headers: {
             ['X-Foo2']: 'customed'

@@ -12,7 +12,7 @@ class Request {
     constructor(options) {
         this.method = options.method || 'GET';
         this.host = options.host || 'localhost';
-        this.port = options.port || '8088';
+        this.port = options.port || '8080';
         this.path = options.path || '/';
         this.headers = options.headers || {};
         this.body = options.body || {};
@@ -45,6 +45,7 @@ class Request {
                     host: this.host,
                     port: this.port
                 }, () => {
+                    console.log('Client Connected!');
                     connection.write(this.toString());
                 });
             }
@@ -52,6 +53,7 @@ class Request {
             connection.on('data', (data) => {
                 parser.receive(data.toString());
                 if (parser.isFinished) {
+                    console.log(parser.response);
                     resolve(parser.response);
                     connection.end();
                 }
@@ -61,13 +63,17 @@ class Request {
                 reject(err);
                 connection.end();
             });
+
+            connection.on('end', () => {
+                console.log('Client end.');
+            });
         });
     }
 
     toString() {
         return `${this.method} ${this.path} HTTP/1.1\r
-        ${Object.keys(this.headers).map(key => `${key}: ${this.headers[key]}`).join('\r\n')}\r\r
-        ${this.bodyText}`;
+${Object.keys(this.headers).map(key => `${key}: ${this.headers[key]}`).join('\r\n')}\r\n
+${this.bodyText}`;
     }
 }
 

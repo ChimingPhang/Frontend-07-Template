@@ -1,3 +1,4 @@
+const ThunkedBodyParser = require('./thunkedBodyParser');
 class ResponseParser {
     /**
     HTTP/1.1 200 OK
@@ -27,8 +28,21 @@ class ResponseParser {
         this.headers = {};
         this.headerName = '';
         this.headerValue = '';
-        this.isFinished = false;
         this.bodyParser = null;
+    }
+
+    get isFinished() {
+        return this.bodyParser && this.bodyParser.isFinished;
+    }
+
+    get response() {
+        this.statusLine.match(/HTTP\/1.1 ([0-9]+) ([\s\S]+)/);
+        return {
+          statusCode: RegExp.$1,
+          statusText: RegExp.$2,
+          headers: this.headers,
+          body: this.bodyParser.content.join("")
+        }
     }
 
     receive(text) {
@@ -53,6 +67,9 @@ class ResponseParser {
                 this.currentStatus = this.waitingStatus.WAITING_HEADER_SPACE;
             } else if (char === '\r') {
                 this.currentStatus = this.waitingStatus.WAITING_HEADER_BLOCK_END;
+                if (this.headers['Transfer-Encoding'] === 'chunked') {
+                    this.bodyParser = new ThunkedBodyParser();
+                }
             } else {
                 this.headerName += char;
             }
@@ -78,7 +95,7 @@ class ResponseParser {
                 this.currentStatus = this.waitingStatus.WAITING_BODY;
             }
         } else if (this.currentStatus === this.waitingStatus.WAITING_BODY) {
-            console.log(char);
+            this.bodyParser.receiveChar(char);
         }
     }
 }

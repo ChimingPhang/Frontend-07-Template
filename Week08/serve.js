@@ -5,13 +5,14 @@ http.createServer((request, response) => {
     request.on('error', err => {
         console.error(err);
     }).on('data', chunk => {
-        body.push(chunk.toString());
+        console.error('data');
+        body.push(Buffer.from(chunk.toString(), 'utf8'));
     }).on('end', () => {
         body = Buffer.concat(body).toString();
-        console.log('body:', body);
+        console.log("body:", body);
         response.writeHead(200, { 'Content-Type': 'text/html' });
-        response.end('Hello World\n');
+        response.end(' Hello World\n');
     });
-}).listen(8088);
+}).listen(8080);
 
 console.log('server started');
